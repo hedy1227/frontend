@@ -5,12 +5,12 @@
         <div class="card-header">
           <span>用户热力图</span>
           <div class="header-actions">
-            <el-select v-model="filters.gender" placeholder="性别" size="default" clearable @change="handleFilterChange">
+            <el-select v-model="filters.gender" placeholder="性别" size="default" clearable style="width: 100px" @change="handleFilterChange">
               <el-option label="全部性别" value="" />
               <el-option label="男" value="male" />
               <el-option label="女" value="female" />
             </el-select>
-            <el-select v-model="filters.age" placeholder="年龄段" size="default" clearable @change="handleFilterChange">
+            <el-select v-model="filters.age" placeholder="年龄段" size="default" clearable style="width: 110px" @change="handleFilterChange">
               <el-option label="全部年龄段" value="" />
               <el-option label="18-25岁" value="18-25" />
               <el-option label="26-35岁" value="26-35" />
@@ -18,14 +18,14 @@
               <el-option label="46-55岁" value="46-55" />
               <el-option label="55岁以上" value="55+" />
             </el-select>
-            <el-select v-model="filters.activity" placeholder="活跃度" size="default" clearable @change="handleFilterChange">
+            <el-select v-model="filters.activity" placeholder="活跃度" size="default" clearable style="width: 100px" @change="handleFilterChange">
               <el-option label="全部活跃度" value="" />
               <el-option label="高活跃" value="high" />
               <el-option label="中活跃" value="medium" />
               <el-option label="低活跃" value="low" />
               <el-option label="沉默" value="silent" />
             </el-select>
-            <el-select v-model="filters.consumption" placeholder="消费层级" size="default" clearable @change="handleFilterChange">
+            <el-select v-model="filters.consumption" placeholder="消费层级" size="default" clearable style="width: 100px" @change="handleFilterChange">
               <el-option label="全部消费层级" value="" />
               <el-option label="5A" value="5A" />
               <el-option label="4R" value="4R" />
@@ -33,14 +33,14 @@
               <el-option label="2R" value="2R" />
               <el-option label="1R" value="1R" />
             </el-select>
-            <el-select v-model="filters.loyalty" placeholder="忠诚度状态" size="default" clearable @change="handleFilterChange">
+            <el-select v-model="filters.loyalty" placeholder="忠诚度状态" size="default" clearable style="width: 110px" @change="handleFilterChange">
               <el-option label="全部忠诚度" value="" />
               <el-option label="忠实用户" value="loyal" />
               <el-option label="活跃会员" value="active" />
               <el-option label="普通用户" value="normal" />
               <el-option label="流失风险" value="risk" />
             </el-select>
-            <el-select v-model="filters.preference" placeholder="饮酒偏好" size="default" clearable @change="handleFilterChange">
+            <el-select v-model="filters.preference" placeholder="饮酒偏好" size="default" clearable style="width: 110px" @change="handleFilterChange">
               <el-option label="全部饮酒偏好" value="" />
               <el-option label="白酒偏好" value="baijiu" />
               <el-option label="啤酒偏好" value="beer" />
@@ -111,7 +111,7 @@
 
           <el-card shadow="hover" style="margin-top: 16px">
             <template #header>选中路网详情</template>
-            <div v-if="selectedRoad" class="road-detail">
+            <div v-if="selectedRoad" class="road-detail" style="max-height: 500px; overflow-y: auto;">
               <el-descriptions :column="1" border size="small">
                 <el-descriptions-item label="路网名称">{{ selectedRoad.blockName }}</el-descriptions-item>
                 <el-descriptions-item label="所属街道">{{ selectedRoad.street }}</el-descriptions-item>
@@ -130,10 +130,10 @@
 
               <div class="tag-section">
                 <div class="tag-title">性别分布</div>
-                <el-progress :percentage="selectedRoad.tagDistribution.gender.male" color="#409EFF">
+                <el-progress :percentage="selectedRoad.tagDistribution.gender.male" color="#409EFF" :stroke-width="10">
                   <span>男 {{ selectedRoad.tagDistribution.gender.male }}%</span>
                 </el-progress>
-                <el-progress :percentage="selectedRoad.tagDistribution.gender.female" color="#f56c6c">
+                <el-progress :percentage="selectedRoad.tagDistribution.gender.female" color="#f56c6c" :stroke-width="10">
                   <span>女 {{ selectedRoad.tagDistribution.gender.female }}%</span>
                 </el-progress>
               </div>
@@ -573,12 +573,15 @@ const getDiversityColor = (index) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .header-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .map-wrapper {
@@ -697,7 +700,7 @@ const getDiversityColor = (index) => {
 .preference-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .age-label,
@@ -706,7 +709,7 @@ const getDiversityColor = (index) => {
 .preference-label {
   font-size: 11px;
   color: #666;
-  width: 60px;
+  width: 56px;
   flex-shrink: 0;
 }
 
