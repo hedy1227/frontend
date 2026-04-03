@@ -24,6 +24,7 @@
           <el-menu-item index="/market/heatmap">前端分布热力图</el-menu-item>
           <el-menu-item index="/market/insight">空白网点挖掘</el-menu-item>
           <el-menu-item index="/market/flow">订单流向</el-menu-item>
+          <el-menu-item index="/market/core-atmosphere">核心氛围街区</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="user">

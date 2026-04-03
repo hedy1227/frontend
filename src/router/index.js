@@ -36,6 +36,12 @@ const routes = [
         component: () => import('@/views/market/flow.vue'),
         meta: { title: '订单流向' }
       },
+      {
+        path: 'market/core-atmosphere',
+        name: 'CoreAtmosphere',
+        component: () => import('@/views/market/coreAtmosphere.vue'),
+        meta: { title: '核心氛围街区' }
+      },
       // Phase 2: 精准营销
       {
         path: 'user/select',
