@@ -25,6 +25,7 @@
           <el-menu-item index="/market/insight">空白网点挖掘</el-menu-item>
           <el-menu-item index="/market/flow">订单流向</el-menu-item>
           <el-menu-item index="/market/core-atmosphere">核心氛围街区</el-menu-item>
+          <el-menu-item index="/market/marketing">营销洞察</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="user">
@@ -34,6 +35,7 @@
           </template>
           <el-menu-item index="/user/select">产品推广选区</el-menu-item>
           <el-menu-item index="/user/heatmap">用户热力图</el-menu-item>
+          <el-menu-item index="/user/brand">品牌洞察</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="manage">

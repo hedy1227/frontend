@@ -42,6 +42,12 @@ const routes = [
         component: () => import('@/views/market/coreAtmosphere.vue'),
         meta: { title: '核心氛围街区' }
       },
+      {
+        path: 'market/marketing',
+        name: 'MarketingInsight',
+        component: () => import('@/views/marketing/marketingInsight.vue'),
+        meta: { title: '营销洞察' }
+      },
       // Phase 2: 精准营销
       {
         path: 'user/select',
@@ -54,6 +60,12 @@ const routes = [
         name: 'UserHeatMap',
         component: () => import('@/views/user/userHeatMap.vue'),
         meta: { title: '用户热力图' }
+      },
+      {
+        path: 'user/brand',
+        name: 'BrandInsight',
+        component: () => import('@/views/user/brandInsight.vue'),
+        meta: { title: '品牌洞察' }
       },
       // Phase 3: 管理赋能
       {
