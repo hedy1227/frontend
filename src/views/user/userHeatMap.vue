@@ -201,7 +201,7 @@
           导出Excel
         </el-button>
       </template>
-      <el-table :data="tableData" height="350" stripe @row-click="handleRowClick">
+      <el-table :data="tableData" height="250" stripe @row-click="handleRowClick">
         <el-table-column prop="rank" label="排名" width="70" sortable>
           <template #default="{ row }">
             <span :class="['rank-badge', row.rank <= 3 ? 'top' : '']">{{ row.rank }}</span>
@@ -589,7 +589,7 @@ const getDiversityColor = (index) => {
 
 .map-wrapper {
   position: relative;
-  height: 520px;
+  height: 650px;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -746,7 +746,7 @@ const getDiversityColor = (index) => {
 .right-panel {
   display: flex;
   flex-direction: column;
-  height: 520px;
+  height: 650px;
   gap: 16px;
 }
 
