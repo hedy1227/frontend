@@ -132,9 +132,16 @@
 
             <el-divider>氛围标签分布</el-divider>
             <div class="tag-distribution">
-              <div v-for="item in selectedBlock.tagDistribution" :key="item.tag" class="tag-item">
-                <span class="tag-name">{{ item.tag }}</span>
-                <el-progress :percentage="item.percentage" :color="getScoreColor(item.percentage)" :stroke-width="6" />
+              <div v-for="item in selectedBlock.tagDistribution" :key="item.tag" class="tag-card">
+                <div class="tag-icon">{{ getTagEmoji(item.tag) }}</div>
+                <div class="tag-name">{{ item.tag }}</div>
+                <div class="tag-percent">{{ item.percentage }}%</div>
+                <el-progress
+                  :percentage="item.percentage"
+                  :color="getScoreColor(item.percentage)"
+                  :stroke-width="6"
+                  :show-text="false"
+                />
               </div>
             </div>
           </div>
@@ -309,6 +316,17 @@ const getScoreColor = (percentage) => {
   if (percentage >= 60) return '#e6a23c'
   return '#67c23a'
 }
+
+const getTagEmoji = (tag) => {
+  const map = {
+    '货架贴': '🏷️',
+    '瓶身贴': '🍶',
+    '瓶颈卡': '🏷️',
+    '堆头装饰': '📦',
+    '组合陈列': '🗂️'
+  }
+  return map[tag] || '📌'
+}
 </script>
 
 <style scoped>
@@ -447,19 +465,43 @@ const getScoreColor = (percentage) => {
 
 .tag-distribution {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.tag-distribution .tag-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.tag-card {
+  flex: 1;
+  min-width: 90px;
+  max-width: 120px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 12px 10px 10px;
+  text-align: center;
+  border: 1px solid #ebeef5;
+  transition: box-shadow 0.2s;
 }
 
-.tag-distribution .tag-name {
+.tag-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tag-card .tag-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.tag-card .tag-name {
   font-size: 12px;
-  color: #666;
+  color: #606266;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.tag-card .tag-percent {
+  font-size: 18px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 6px;
 }
 
 .no-selection {
