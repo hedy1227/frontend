@@ -55,7 +55,7 @@
         </div>
       </template>
 
-      <el-row :gutter="20">
+      <el-row :gutter="20" style="display: flex">
         <el-col :span="16">
           <div class="map-wrapper">
             <GdsMap
@@ -86,7 +86,7 @@
             </div>
           </div>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="8" class="right-panel">
           <el-card shadow="hover" class="stats-card">
             <template #header>用户规模统计</template>
             <div class="stats-overview">
@@ -109,9 +109,9 @@
             </div>
           </el-card>
 
-          <el-card shadow="hover" style="margin-top: 16px">
+          <el-card shadow="hover" class="detail-card">
             <template #header>选中路网详情</template>
-            <div v-if="selectedRoad" class="road-detail" style="max-height: 500px; overflow-y: auto;">
+            <div v-if="selectedRoad" class="road-detail">
               <el-descriptions :column="1" border size="small">
                 <el-descriptions-item label="路网名称">{{ selectedRoad.blockName }}</el-descriptions-item>
                 <el-descriptions-item label="所属街道">{{ selectedRoad.street }}</el-descriptions-item>
@@ -290,6 +290,7 @@ const loadRoadNetwork = async () => {
       feature.properties.userCount = 0
       feature.properties.density = 'none'
       feature.properties.id = index
+      feature.properties.colorValue = Math.random()
     })
 
     mapRef.value?.addRoadLayer(roadLayerId, geojson, {
@@ -352,6 +353,8 @@ const loadUserHeatData = () => {
     feature.properties.userCount = userCount
     feature.properties.density = density
     feature.properties.street = streets[index % streets.length]
+    // 随机色阶值，用于生成随机颜色
+    feature.properties.colorValue = Math.random()
 
     const genderDistribution = { male: Math.floor(Math.random() * 30 + 45), female: 0 }
     genderDistribution.female = 100 - genderDistribution.male
@@ -419,10 +422,10 @@ const loadUserHeatData = () => {
     })
   })
 
-  // 更新地图
+  // 更新地图 - 使用随机色阶
   mapRef.value?.removeLayer(roadLayerId)
   mapRef.value?.addRoadLayer(roadLayerId, originalGeoJSON, {
-    colorField: 'userCount',
+    colorField: 'colorValue',
     opacity: 0.7
   })
 
@@ -738,5 +741,33 @@ const getDiversityColor = (index) => {
 .rank-badge.top {
   background: #f56c6c;
   color: #fff;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  height: 520px;
+  gap: 16px;
+}
+
+.stats-card {
+  flex-shrink: 0;
+}
+
+.detail-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-card :deep(.el-card__body) {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.road-detail {
+  padding: 0;
 }
 </style>
