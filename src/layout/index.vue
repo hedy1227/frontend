@@ -33,6 +33,7 @@
             <span>用户洞察与推广</span>
           </template>
           <el-menu-item index="/user/select">产品推广选区</el-menu-item>
+          <el-menu-item index="/user/heatmap">用户热力图</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="manage">

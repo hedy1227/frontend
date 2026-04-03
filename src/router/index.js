@@ -49,6 +49,12 @@ const routes = [
         component: () => import('@/views/user/selectArea.vue'),
         meta: { title: '产品推广选区' }
       },
+      {
+        path: 'user/heatmap',
+        name: 'UserHeatMap',
+        component: () => import('@/views/user/userHeatMap.vue'),
+        meta: { title: '用户热力图' }
+      },
       // Phase 3: 管理赋能
       {
         path: 'manage/weak',
