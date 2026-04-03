@@ -63,18 +63,6 @@
             <span class="color-gradient"></span>
             <span>浓度: 低 → 高</span>
           </div>
-          <div class="legend-item">
-            <span class="dot high"></span>
-            <span>高浓度街区</span>
-          </div>
-          <div class="legend-item">
-            <span class="dot medium"></span>
-            <span>中浓度街区</span>
-          </div>
-          <div class="legend-item">
-            <span class="dot low"></span>
-            <span>低浓度街区</span>
-          </div>
         </div>
         <div class="legend-tags">
           <span class="tag-item"><span class="tag-icon">📦</span>货架贴</span>
@@ -413,24 +401,6 @@ const getScoreColor = (percentage) => {
   height: 12px;
   background: linear-gradient(90deg, #313695, #74add1, #fdae61, #f46d43, #d73027);
   border-radius: 2px;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.dot.high {
-  background: #f56c6c;
-}
-
-.dot.medium {
-  background: #e6a23c;
-}
-
-.dot.low {
-  background: #67c23a;
 }
 
 .legend-tags {
