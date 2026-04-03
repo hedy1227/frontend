@@ -55,6 +55,35 @@
           </div>
         </div>
       </div>
+
+      <div class="legend">
+        <div class="legend-title">氛围浓度色阶</div>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="color-gradient"></span>
+            <span>浓度: 低 → 高</span>
+          </div>
+          <div class="legend-item">
+            <span class="dot high"></span>
+            <span>高浓度街区</span>
+          </div>
+          <div class="legend-item">
+            <span class="dot medium"></span>
+            <span>中浓度街区</span>
+          </div>
+          <div class="legend-item">
+            <span class="dot low"></span>
+            <span>低浓度街区</span>
+          </div>
+        </div>
+        <div class="legend-tags">
+          <span class="tag-item"><span class="tag-icon">📦</span>货架贴</span>
+          <span class="tag-item"><span class="tag-icon">🍶</span>瓶身贴</span>
+          <span class="tag-item"><span class="tag-icon">🏷️</span>瓶颈卡</span>
+          <span class="tag-item"><span class="tag-icon">🗂️</span>堆头装饰</span>
+          <span class="tag-item"><span class="tag-icon">📚</span>组合陈列</span>
+        </div>
+      </div>
     </el-card>
 
     <el-row :gutter="20" style="margin-top: 20px">
@@ -351,6 +380,77 @@ const getScoreColor = (percentage) => {
 .info-item .value.highlight {
   color: #f56c6c;
   font-size: 16px;
+}
+
+.legend {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+}
+
+.legend-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.legend-items {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.color-gradient {
+  width: 80px;
+  height: 12px;
+  background: linear-gradient(90deg, #313695, #74add1, #fdae61, #f46d43, #d73027);
+  border-radius: 2px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot.high {
+  background: #f56c6c;
+}
+
+.dot.medium {
+  background: #e6a23c;
+}
+
+.dot.low {
+  background: #67c23a;
+}
+
+.legend-tags {
+  display: flex;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #e6e6e6;
+  flex-wrap: wrap;
+}
+
+.tag-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.tag-icon {
+  font-size: 14px;
 }
 
 .rank-badge {
