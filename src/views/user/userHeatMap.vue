@@ -130,57 +130,73 @@
 
               <div class="tag-section">
                 <div class="tag-title">性别分布</div>
-                <el-progress :percentage="selectedRoad.tagDistribution.gender.male" color="#409EFF" :stroke-width="10">
-                  <span>男 {{ selectedRoad.tagDistribution.gender.male }}%</span>
-                </el-progress>
-                <el-progress :percentage="selectedRoad.tagDistribution.gender.female" color="#f56c6c" :stroke-width="10">
-                  <span>女 {{ selectedRoad.tagDistribution.gender.female }}%</span>
-                </el-progress>
+                <div class="icon-dist-row">
+                  <div class="icon-dist-item">
+                    <span class="icon-badge male">♂</span>
+                    <span class="icon-label">男</span>
+                    <div class="icon-bar"><div class="icon-bar-fill male" :style="{width: selectedRoad.tagDistribution.gender.male + '%'}"></div></div>
+                    <span class="icon-pct">{{ selectedRoad.tagDistribution.gender.male }}%</span>
+                  </div>
+                  <div class="icon-dist-item">
+                    <span class="icon-badge female">♀</span>
+                    <span class="icon-label">女</span>
+                    <div class="icon-bar"><div class="icon-bar-fill female" :style="{width: selectedRoad.tagDistribution.gender.female + '%'}"></div></div>
+                    <span class="icon-pct">{{ selectedRoad.tagDistribution.gender.female }}%</span>
+                  </div>
+                </div>
               </div>
 
               <div class="tag-section">
                 <div class="tag-title">年龄分布</div>
-                <div class="age-bars">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.age" :key="key" class="age-item">
-                    <span class="age-label">{{ key }}</span>
-                    <el-progress :percentage="val" :stroke-width="8" />
+                <div class="icon-tags">
+                  <div v-for="(val, key) in selectedRoad.tagDistribution.age" :key="key" class="icon-tag-chip">
+                    <span class="chip-icon">👤</span>
+                    <span class="chip-label">{{ key }}</span>
+                    <span class="chip-pct">{{ val }}%</span>
                   </div>
                 </div>
               </div>
 
               <div class="tag-section">
                 <div class="tag-title">活跃度分布</div>
-                <div class="activity-bars">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.activity" :key="key" class="activity-item">
-                    <span class="activity-label">{{ getActivityLabel(key) }}</span>
-                    <el-progress :percentage="val" :stroke-width="8" :color="getActivityColor(key)" />
+                <div class="icon-tags">
+                  <div v-for="(val, key) in selectedRoad.tagDistribution.activity" :key="key" class="icon-tag-chip">
+                    <span class="chip-icon">{{ getActivityIcon(key) }}</span>
+                    <span class="chip-label">{{ getActivityLabel(key) }}</span>
+                    <span class="chip-pct">{{ val }}%</span>
                   </div>
                 </div>
               </div>
 
               <div class="tag-section">
                 <div class="tag-title">消费层级分布</div>
-                <el-tag v-for="(val, key) in selectedRoad.tagDistribution.consumption" :key="key" class="consumption-tag">
-                  {{ key }}: {{ val }}%
-                </el-tag>
+                <div class="icon-tags">
+                  <div v-for="(val, key) in selectedRoad.tagDistribution.consumption" :key="key" class="icon-tag-chip">
+                    <span class="chip-icon">💎</span>
+                    <span class="chip-label">{{ key }}</span>
+                    <span class="chip-pct">{{ val }}%</span>
+                  </div>
+                </div>
               </div>
 
               <div class="tag-section">
                 <div class="tag-title">忠诚度分布</div>
-                <div class="loyalty-bars">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.loyalty" :key="key" class="loyalty-item">
-                    <span class="loyalty-label">{{ getLoyaltyLabel(key) }}</span>
-                    <el-progress :percentage="val" :stroke-width="8" :color="getLoyaltyColor(key)" />
+                <div class="icon-tags">
+                  <div v-for="(val, key) in selectedRoad.tagDistribution.loyalty" :key="key" class="icon-tag-chip">
+                    <span class="chip-icon">{{ getLoyaltyIcon(key) }}</span>
+                    <span class="chip-label">{{ getLoyaltyLabel(key) }}</span>
+                    <span class="chip-pct">{{ val }}%</span>
                   </div>
                 </div>
               </div>
 
               <div class="tag-section">
                 <div class="tag-title">饮酒偏好分布</div>
-                <div class="preference-bars">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.preference" :key="key" class="preference-item">
-                    <span class="preference-label">{{ getPreferenceLabel(key) }}</span>
-                    <el-progress :percentage="val" :stroke-width="8" :color="getPreferenceColor(key)" />
+                <div class="icon-tags">
+                  <div v-for="(val, key) in selectedRoad.tagDistribution.preference" :key="key" class="icon-tag-chip">
+                    <span class="chip-icon">{{ getPreferenceIcon(key) }}</span>
+                    <span class="chip-label">{{ getPreferenceLabel(key) }}</span>
+                    <span class="chip-pct">{{ val }}%</span>
                   </div>
                 </div>
               </div>
@@ -535,6 +551,21 @@ const getActivityLabel = (key) => {
   return labels[key] || key
 }
 
+const getActivityIcon = (key) => {
+  const icons = { high: '⚡', medium: '📊', low: '🐢', silent: '💤' }
+  return icons[key] || '📌'
+}
+
+const getLoyaltyIcon = (key) => {
+  const icons = { loyal: '💛', active: '💙', normal: '🩶', risk: '🔴' }
+  return icons[key] || '📌'
+}
+
+const getPreferenceIcon = (key) => {
+  const icons = { baijiu: '🍶', beer: '🍺', mix: '🥂', none: '🚫' }
+  return icons[key] || '📌'
+}
+
 const getActivityColor = (key) => {
   const colors = { high: '#67c23a', medium: '#409EFF', low: '#e6a23c', silent: '#909399' }
   return colors[key] || '#909399'
@@ -684,41 +715,121 @@ const getDiversityColor = (index) => {
 
 .tag-title {
   font-size: 12px;
-  color: #666;
-  margin-bottom: 8px;
+  color: #909399;
+  margin-bottom: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
-.age-bars,
-.activity-bars,
-.loyalty-bars,
-.preference-bars {
+/* 性别分布横向条 */
+.icon-dist-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
-.age-item,
-.activity-item,
-.loyalty-item,
-.preference-item {
+.icon-dist-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-.age-label,
-.activity-label,
-.loyalty-label,
-.preference-label {
-  font-size: 11px;
-  color: #666;
-  width: 56px;
+.icon-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
   flex-shrink: 0;
 }
 
-.consumption-tag {
-  margin-right: 6px;
-  margin-bottom: 4px;
+.icon-badge.male {
+  background: #e6f0ff;
+  color: #409EFF;
+}
+
+.icon-badge.female {
+  background: #fce6e6;
+  color: #f56c6c;
+}
+
+.icon-label {
+  font-size: 12px;
+  color: #606266;
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.icon-bar {
+  flex: 1;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.icon-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.icon-bar-fill.male {
+  background: linear-gradient(90deg, #74add1, #409EFF);
+}
+
+.icon-bar-fill.female {
+  background: linear-gradient(90deg, #f46d43, #f56c6c);
+}
+
+.icon-pct {
+  font-size: 12px;
+  font-weight: bold;
+  color: #303133;
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* 图标标签芯片 */
+.icon-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.icon-tag-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f5f7fa;
+  border: 1px solid #e6e8eb;
+  border-radius: 16px;
+  padding: 4px 10px 4px 6px;
+  transition: all 0.2s;
+}
+
+.icon-tag-chip:hover {
+  border-color: #409EFF;
+  background: #ecf5ff;
+}
+
+.chip-icon {
+  font-size: 14px;
+}
+
+.chip-label {
+  font-size: 11px;
+  color: #606266;
+}
+
+.chip-pct {
+  font-size: 12px;
+  font-weight: bold;
+  color: #303133;
 }
 
 .no-selection {
