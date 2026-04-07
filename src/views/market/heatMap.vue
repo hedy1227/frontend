@@ -80,12 +80,6 @@
             <span>圆圈大小 = 销量规模</span>
           </div>
         </div>
-        <div class="legend-road">
-          <span class="road-item"><span class="road highway"></span>高速公路</span>
-          <span class="road-item"><span class="road primary"></span>主干道</span>
-          <span class="road-item"><span class="road secondary"></span>次干道</span>
-          <span class="road-item"><span class="road tertiary"></span>支路</span>
-        </div>
       </div>
     </el-card>
 
