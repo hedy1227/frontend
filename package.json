@@ -2,6 +2,9 @@
   "name": "jinjiu-drtm",
   "version": "1.0.0",
   "description": "基于地理大数据的精准营销系统",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
