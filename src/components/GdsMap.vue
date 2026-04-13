@@ -170,7 +170,7 @@ const addRoadLayer = (id, geojson, options = {}) => {
   if (!map.value) return
 
   const {
-    opacity = 0.6,
+    opacity = 0.4,
     lineWidth = 1,
     color = '#409eff',
     colorField = null,        // 热力值字段名，归一化0-1
@@ -217,16 +217,14 @@ const addRoadLayer = (id, geojson, options = {}) => {
       color
     ]
   } else if (colorField) {
-    // 热力值色阶：蓝-青-黄-橙-红
+    // 热力值色阶：红-黄-绿，统一40%透明度
     fillColorExpr = [
       'interpolate',
       ['linear'],
       ['get', colorField],
-      0, '#313695',
-      0.25, '#74add1',
-      0.5, '#fee090',
-      0.75, '#f46d43',
-      1, '#a50026'
+      0, '#67c23a',
+      0.5, '#e6a23c',
+      1, '#f56c6c'
     ]
   } else {
     fillColorExpr = color

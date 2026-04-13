@@ -311,7 +311,7 @@ const loadRoadNetwork = async () => {
 
     mapRef.value?.addRoadLayer(roadLayerId, geojson, {
       colorField: 'userCount',
-      opacity: 0.7
+      opacity: 0.4
     })
 
     loadUserHeatData()
@@ -442,7 +442,7 @@ const loadUserHeatData = () => {
   mapRef.value?.removeLayer(roadLayerId)
   mapRef.value?.addRoadLayer(roadLayerId, originalGeoJSON, {
     colorField: 'colorValue',
-    opacity: 0.7
+    opacity: 0.4
   })
 
   // 计算统计
