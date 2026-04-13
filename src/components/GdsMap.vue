@@ -170,7 +170,7 @@ const addRoadLayer = (id, geojson, options = {}) => {
   if (!map.value) return
 
   const {
-    opacity = 0.4,
+    opacity = 0.6,
     lineWidth = 1,
     color = '#409eff',
     colorField = null,        // 热力值字段名，归一化0-1
@@ -217,15 +217,37 @@ const addRoadLayer = (id, geojson, options = {}) => {
       color
     ]
   } else if (colorField) {
-    // 热力值色阶：红-黄-绿，统一40%透明度
-    fillColorExpr = [
-      'interpolate',
-      ['linear'],
-      ['get', colorField],
-      0, '#67c23a',
-      0.5, '#e6a23c',
-      1, '#f56c6c'
-    ]
+    // 检查是否为分类字段（high/medium/low 或 high/medium/low）
+    const sampleFeature = geojson.features?.[0]
+    const fieldValue = sampleFeature?.properties?.[colorField]
+
+    if (typeof fieldValue === 'string') {
+      // 分类字段：使用 match 表达式
+      if (fieldValue === 'high' || fieldValue === 'medium' || fieldValue === 'low') {
+        // 渠道活跃度分类
+        fillColorExpr = [
+          'match',
+          ['get', colorField],
+          'high', '#67c23a',    // 绿色 - 高
+          'medium', '#e6a23c',  // 橙色 - 中
+          'low', '#909399',     // 灰色 - 低
+          color
+        ]
+      } else {
+        // 其他分类字段使用默认颜色
+        fillColorExpr = color
+      }
+    } else {
+      // 数值字段：3档热力值色阶（低密度绿、中密度黄、高密度红）
+      fillColorExpr = [
+        'interpolate',
+        ['linear'],
+        ['get', colorField],
+        0, '#67c23a',      // 低密度 - 绿色
+        0.5, '#e6a23c',    // 中密度 - 黄色
+        1, '#f56c6c'       // 高密度 - 红色
+      ]
+    }
   } else {
     fillColorExpr = color
   }
@@ -493,9 +515,33 @@ const addPolygonLayer = (id, data, options = {}) => {
   }
 }
 
+// 切换图层显隐（不删除 source，只切换 visibility）
+const toggleLayerVisibility = (id, visible) => {
+  if (!map.value) return
+  const layerId = id.includes('-zone-') ? id : `${id}-zone-fill`
+  if (map.value.getLayer(layerId)) {
+    map.value.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none')
+  }
+  // 同时控制边框和线图层
+  const borderLayerId = `${id}-zone-border`
+  if (map.value.getLayer(borderLayerId)) {
+    map.value.setLayoutProperty(borderLayerId, 'visibility', visible ? 'visible' : 'none')
+  }
+  const lineLayerId = `${id}-zone-line`
+  if (map.value.getLayer(lineLayerId)) {
+    map.value.setLayoutProperty(lineLayerId, 'visibility', visible ? 'visible' : 'none')
+  }
+}
+
 // 移除图层
 const removeLayer = (id) => {
   if (!map.value) return
+  // 清理相关的所有子图层
+  ;['zone-fill', 'zone-border', 'zone-line'].forEach(sub => {
+    if (map.value.getLayer(`${id}-${sub}`)) {
+      map.value.removeLayer(`${id}-${sub}`)
+    }
+  })
   if (map.value.getLayer(id)) map.value.removeLayer(id)
   if (map.value.getSource(id)) map.value.removeSource(id)
 }
@@ -517,6 +563,7 @@ defineExpose({
   addPolygonLayer,
   addRoadLayer,
   removeLayer,
+  toggleLayerVisibility,
   flyTo,
   getMap
 })

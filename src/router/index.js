@@ -25,6 +25,12 @@ const routes = [
         meta: { title: '前端分布热力图' }
       },
       {
+        path: 'market/channel',
+        name: 'ChannelActivity',
+        component: () => import('@/views/market/channelActivity.vue'),
+        meta: { title: '渠道活跃度识别' }
+      },
+      {
         path: 'market/insight',
         name: 'Insight',
         component: () => import('@/views/market/insight.vue'),

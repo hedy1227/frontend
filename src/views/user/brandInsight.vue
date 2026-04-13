@@ -2,553 +2,616 @@
   <div class="brand-insight-page">
     <el-card shadow="hover">
       <template #header>
-        <span>品牌洞察 - 品牌影响力热力图</span>
-        <div class="header-actions">
-          <el-select v-model="filters.province" placeholder="选择省份" size="default" clearable @change="handleAnalyze">
-            <el-option label="四川省" value="sichuan" />
-            <el-option label="重庆市" value="chongqing" />
-            <el-option label="湖北省" value="hubei" />
-          </el-select>
-          <el-select v-model="filters.city" placeholder="选择城市" size="default" clearable @change="handleAnalyze">
-            <el-option label="成都" value="chengdu" />
-            <el-option label="重庆" value="chongqing" />
-            <el-option label="武汉" value="wuhan" />
-          </el-select>
-          <el-button type="primary" @click="handleAnalyze">刷新数据</el-button>
-        </div>
+        <span>品牌洞察</span>
       </template>
 
-      <el-row :gutter="20" style="height: 500px;">
-        <!-- 左侧：筛选 + 品牌列表 -->
+      <el-row :gutter="20" style="height: 580px;">
+        <!-- 左侧城市列表 -->
         <el-col :span="5">
-          <div class="filter-panel">
-            <h4>品牌选择</h4>
-            <div class="brand-list">
+          <div class="city-panel">
+            <h4>河北省城市列表</h4>
+            <el-input
+              v-model="searchKeyword"
+              placeholder="搜索城市"
+              size="default"
+              clearable
+              style="margin-bottom: 12px;">
+              <template #prefix><el-icon><Search /></el-icon></template>
+            </el-input>
+            <div class="city-list">
               <div
-                v-for="brand in brandList"
-                :key="brand.id"
-                class="brand-item"
-                :class="{ active: selectedBrand === brand.id }"
-                @click="handleSelectBrand(brand)"
+                v-for="city in filteredCities"
+                :key="city.code"
+                class="city-item"
+                :class="{ active: selectedCity === city.code, [city.heatLevel]: true }"
+                @click="handleSelectCity(city)"
               >
-                <div class="brand-color" :style="{ background: brand.color }"></div>
-                <div class="brand-info">
-                  <div class="brand-name">{{ brand.name }}</div>
-                  <div class="brand-score">热度 {{ brand.heatScore }}</div>
+                <div class="city-info">
+                  <span class="city-name">{{ city.name }}</span>
+                  <span class="city-rank">TOP {{ city.rank }}</span>
                 </div>
-                <el-tag :type="brand.trend > 0 ? 'success' : 'danger'" size="small">
-                  {{ brand.trend > 0 ? '↑' : '↓' }}{{ Math.abs(brand.trend) }}%
-                </el-tag>
+                <div class="city-meta">
+                  <span class="heat-tag" :class="city.heatLevel">{{ getHeatLabel(city.heatLevel) }}</span>
+                  <span class="sales">{{ city.sales }}万</span>
+                </div>
               </div>
             </div>
           </div>
         </el-col>
 
-        <!-- 中间：地图 -->
+        <!-- 中间地图 -->
         <el-col :span="12">
           <div class="map-wrapper">
-            <GdsMap
-              ref="mapRef"
-              :center="[104.094, 30.679]"
-              :zoom="12"
-              @load="handleMapLoad"
-            />
-            <div class="layer-control">
-              <el-checkbox v-model="layerOptions.activity" label="品牌活跃度" @change="handleLayerToggle" />
-              <el-checkbox v-model="layerOptions.social" label="社媒搜索指数" @change="handleLayerToggle" />
-              <el-checkbox v-model="layerOptions.crowd" label="A1-A3人群占比" @change="handleLayerToggle" />
-              <el-checkbox v-model="layerOptions.preference" label="好感度与偏好度" @change="handleLayerToggle" />
-              <el-divider style="margin: 6px 0;" />
-              <el-checkbox v-model="layerOptions.poi" label="品牌网点" @change="handleLayerToggle" />
+            <div ref="mapContainer" class="map-container"></div>
+            <div v-if="loading" class="map-loading">
+              <el-icon class="is-loading"><Loading /></el-icon>
+              <span>地图加载中...</span>
             </div>
             <div class="map-legend">
-              <span>品牌热度：</span>
-              <span class="legend-item"><span class="heat-bar high"></span>高</span>
-              <span class="legend-item"><span class="heat-bar mid"></span>中</span>
-              <span class="legend-item"><span class="heat-bar low"></span>低</span>
+              <div class="legend-title">品牌热度</div>
+              <div class="legend-items">
+                <div class="legend-item">
+                  <span class="color-box high"></span>
+                  <span>高热度</span>
+                </div>
+                <div class="legend-item">
+                  <span class="color-box medium"></span>
+                  <span>中热度</span>
+                </div>
+                <div class="legend-item">
+                  <span class="color-box low"></span>
+                  <span>低热度</span>
+                </div>
+              </div>
             </div>
           </div>
         </el-col>
 
-        <!-- 右侧：品牌指标详情 -->
+        <!-- 右侧统计面板 -->
         <el-col :span="7">
-          <!-- 品牌综合指数 -->
-          <div class="brand-score-card" v-if="currentBrand">
-            <div class="brand-header">
-              <div class="brand-color-dot" :style="{ background: currentBrand.color }"></div>
-              <span class="brand-title">{{ currentBrand.name }}</span>
-              <el-tag :type="currentBrand.trend > 0 ? 'success' : 'danger'" size="small">
-                {{ currentBrand.trend > 0 ? '↑' : '↓' }}{{ Math.abs(currentBrand.trend) }}%
-              </el-tag>
-            </div>
-            <div class="overall-score">
-              <span class="score-label">综合热度指数</span>
-              <span class="score-value">{{ currentBrand.heatScore }}</span>
-            </div>
-          </div>
-
-          <!-- 四维指标卡片 -->
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-icon">🔥</span>
-                <span class="metric-name">品牌活跃度</span>
-              </div>
-              <div class="metric-value">{{ currentBrand?.activity || 0 }}</div>
-              <div class="metric-bar">
-                <div class="bar-fill" :style="{ width: (currentBrand?.activity || 0) + '%', background: '#f56c6c' }"></div>
-              </div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-icon">🔍</span>
-                <span class="metric-name">社媒搜索指数</span>
-              </div>
-              <div class="metric-value">{{ currentBrand?.socialIndex || 0 }}</div>
-              <div class="metric-bar">
-                <div class="bar-fill" :style="{ width: (currentBrand?.socialIndex || 0) + '%', background: '#409eff' }"></div>
-              </div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-icon">👥</span>
-                <span class="metric-name">A1-A3人群占比</span>
-              </div>
-              <div class="metric-value">{{ currentBrand?.crowdRatio || 0 }}%</div>
-              <div class="metric-bar">
-                <div class="bar-fill" :style="{ width: (currentBrand?.crowdRatio || 0) + '%', background: '#67c23a' }"></div>
-              </div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-icon">❤️</span>
-                <span class="metric-name">好感度与偏好度</span>
-              </div>
-              <div class="metric-value">{{ currentBrand?.preference || 0 }}</div>
-              <div class="metric-bar">
-                <div class="bar-fill" :style="{ width: (currentBrand?.preference || 0) + '%', background: '#e6a23c' }"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- A1-A3人群分布 -->
-          <div class="crowd-dist-card">
-            <h4>A1-A3人群流转</h4>
-            <div class="crowd-flow">
-              <div class="crowd-item">
-                <div class="crowd-circle a1">
-                  <span class="crowd-label">A1</span>
-                  <span class="crowd-value">{{ crowdData.a1 }}%</span>
+          <div class="stats-panel">
+            <!-- 品牌热度统计卡片 -->
+            <el-card shadow="hover" class="heat-stats-card">
+              <template #header>
+                <div class="card-header">
+                  <span>品牌热度分布</span>
                 </div>
-                <div class="crowd-arrow">→</div>
-                <div class="crowd-circle a2">
-                  <span class="crowd-label">A2</span>
-                  <span class="crowd-value">{{ crowdData.a2 }}%</span>
+              </template>
+              <div class="heat-stats">
+                <div class="heat-stat-item high">
+                  <div class="stat-num">{{ heatStats.high }}</div>
+                  <div class="stat-label">高热度城市</div>
                 </div>
-                <div class="crowd-arrow">→</div>
-                <div class="crowd-circle a3">
-                  <span class="crowd-label">A3</span>
-                  <span class="crowd-value">{{ crowdData.a3 }}%</span>
+                <div class="heat-stat-item medium">
+                  <div class="stat-num">{{ heatStats.medium }}</div>
+                  <div class="stat-label">中热度城市</div>
+                </div>
+                <div class="heat-stat-item low">
+                  <div class="stat-num">{{ heatStats.low }}</div>
+                  <div class="stat-label">低热度城市</div>
                 </div>
               </div>
-            </div>
-            <div class="crowd-desc">
-              <p><span class="dot a1-dot"></span><strong>A1(认知)</strong>：知道该品牌的用户</p>
-              <p><span class="dot a2-dot"></span><strong>A2(兴趣)</strong>：对品牌产生兴趣的用户</p>
-              <p><span class="dot a3-dot"></span><strong>A3(询问)</strong>：主动搜索/询问品牌的用户</p>
-            </div>
+            </el-card>
+
+            <!-- 选中城市详情 -->
+            <el-card shadow="hover" class="city-detail-card" v-if="selectedCityData">
+              <template #header>
+                <div class="card-header">
+                  <span>{{ selectedCityData.name }}</span>
+                  <el-tag size="small" :type="getHeatTagType(selectedCityData.heatLevel)">
+                    {{ getHeatLabel(selectedCityData.heatLevel) }}
+                  </el-tag>
+                </div>
+              </template>
+              <div class="city-detail">
+                <div class="detail-row">
+                  <span class="label">品牌销量</span>
+                  <span class="value">{{ selectedCityData.sales }} 万元</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">市场占有率</span>
+                  <span class="value">{{ selectedCityData.marketShare }}%</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">网点数量</span>
+                  <span class="value">{{ selectedCityData.storeCount }} 家</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">同比增长率</span>
+                  <span class="value" :style="{ color: selectedCityData.growth >= 0 ? '#67c23a' : '#f56c6c' }">
+                    {{ selectedCityData.growth >= 0 ? '+' : '' }}{{ selectedCityData.growth }}%
+                  </span>
+                </div>
+              </div>
+            </el-card>
+
+            <!-- 热度排行榜 -->
+            <el-card shadow="hover" class="rank-card">
+              <template #header>
+                <div class="card-header">
+                  <span>品牌热度排行</span>
+                  <el-button type="success" size="small" @click="handleExport">
+                    <el-icon><Download /></el-icon>
+                    导出
+                  </el-button>
+                </div>
+              </template>
+              <div class="rank-list">
+                <el-table :data="cityRankList" stripe size="small" max-height="200">
+                  <el-table-column prop="rank" label="排名" width="50" />
+                  <el-table-column prop="name" label="城市" />
+                  <el-table-column prop="sales" label="销量(万)" width="80" />
+                  <el-table-column label="热度" width="60">
+                    <template #default="{ row }">
+                      <span class="heat-dot" :class="row.heatLevel"></span>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </el-card>
           </div>
         </el-col>
       </el-row>
     </el-card>
-
-    <!-- 下方图表 -->
-    <el-row :gutter="20" style="margin-top: 16px;">
-      <el-col :span="8">
-        <el-card shadow="hover">
-          <template #header>品牌热度对比</template>
-          <div ref="compareChartRef" style="height: 250px;"></div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card shadow="hover">
-          <template #header>各区品牌热度分布</template>
-          <div ref="districtChartRef" style="height: 250px;"></div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card shadow="hover">
-          <template #header>品牌人群转化漏斗</template>
-          <div ref="funnelChartRef" style="height: 250px;"></div>
-        </el-card>
-      </el-col>
-    </el-row>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, nextTick, computed } from 'vue'
-import * as echarts from 'echarts'
+import { ref, reactive, computed, shallowRef, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import GdsMap from '@/components/GdsMap.vue'
+import { Download, Search, Loading } from '@element-plus/icons-vue'
+import maplibregl from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
 
-const mapRef = ref()
-const compareChartRef = ref()
-const districtChartRef = ref()
-const funnelChartRef = ref()
-let compareChart = null
-let districtChart = null
-let funnelChart = null
-let mapInstance = null
+const mapContainer = ref()
+const mapInstance = shallowRef(null)
+const loading = ref(true)
+const cityGeoJSON = ref(null)
 
-// 筛选条件
-const filters = reactive({
-  province: '',
-  city: ''
-})
+const searchKeyword = ref('')
+const selectedCity = ref(null)
+const cityData = ref([])
 
-// 图层开关
-const layerOptions = reactive({
-  activity: true,
-  social: true,
-  crowd: true,
-  preference: true,
-  poi: true
-})
+// 城市标注层实例，用于管理标注
+const cityMarkers = []
 
-// 品牌列表
-const brandList = ref([
-  { id: 'jinpai', name: '劲牌', color: '#f56c6c', heatScore: 92, trend: 5, activity: 88, socialIndex: 85, crowdRatio: 42, preference: 78 },
-  { id: 'maotai', name: '茅台', color: '#e6a23c', heatScore: 95, trend: 3, activity: 92, socialIndex: 96, crowdRatio: 55, preference: 88 },
-  { id: 'wuliangye', name: '五粮液', color: '#67c23a', heatScore: 88, trend: -2, activity: 85, socialIndex: 82, crowdRatio: 48, preference: 75 },
-  { id: 'yanghe', name: '洋河', color: '#409eff', heatScore: 76, trend: 8, activity: 72, socialIndex: 78, crowdRatio: 35, preference: 65 },
-  { id: 'luzhoulaojiao', name: '泸州老窖', color: '#9933ff', heatScore: 80, trend: 1, activity: 78, socialIndex: 75, crowdRatio: 40, preference: 70 },
-  { id: 'tuopai', name: '沱牌', color: '#00b894', heatScore: 62, trend: -5, activity: 58, socialIndex: 60, crowdRatio: 28, preference: 55 }
-])
+// 初始化纯净地图（无行政区划边界）
+const initMap = () => {
+  if (!mapContainer.value) return
 
-// 当前选中品牌
-const selectedBrand = ref('jinpai')
-
-const currentBrand = computed(() => {
-  return brandList.value.find(b => b.id === selectedBrand.value) || brandList.value[0]
-})
-
-// A1-A3人群数据
-const crowdData = reactive({ a1: 42, a2: 28, a3: 15 })
-
-// 区域热度数据
-const districtData = ref([
-  { name: '成华区', value: 85 },
-  { name: '锦江区', value: 92 },
-  { name: '武侯区', value: 88 },
-  { name: '高新区', value: 78 },
-  { name: '青羊区', value: 72 },
-  { name: '金牛区', value: 65 },
-  { name: '双流区', value: 58 }
-])
-
-const handleMapLoad = (map) => {
-  mapInstance = map
-  loadBrandHeatmap()
-}
-
-const handleSelectBrand = (brand) => {
-  selectedBrand.value = brand.id
-  loadBrandHeatmap()
-  updateMetrics()
-  updateCharts()
-  ElMessage.success(`已切换至 ${brand.name} 品牌分析`)
-}
-
-const handleLayerToggle = () => {
-  loadBrandHeatmap()
-}
-
-const handleAnalyze = () => {
-  // 重新生成数据
-  brandList.value.forEach(brand => {
-    brand.heatScore = Math.floor(Math.random() * 20 + 70)
-    brand.activity = Math.floor(Math.random() * 20 + 70)
-    brand.socialIndex = Math.floor(Math.random() * 20 + 70)
-    brand.crowdRatio = Math.floor(Math.random() * 20 + 30)
-    brand.preference = Math.floor(Math.random() * 20 + 60)
-    brand.trend = Math.floor(Math.random() * 20) - 10
-  })
-  loadBrandHeatmap()
-  updateMetrics()
-  updateCharts()
-  ElMessage.success('数据已刷新')
-}
-
-// 生成品牌热力图数据
-const generateHeatData = (type, intensity) => {
-  const data = []
-  const baseLng = 104.06
-  const baseLat = 30.65
-  const count = type === 'poi' ? 15 : 80
-
-  for (let i = 0; i < count; i++) {
-    data.push({
-      coordinates: [
-        baseLng + (Math.random() - 0.5) * 0.18,
-        baseLat + (Math.random() - 0.5) * 0.14
-      ],
-      intensity: Math.random() * intensity
-    })
-  }
-  return data
-}
-
-const loadBrandHeatmap = () => {
-  if (!mapInstance) return
-
-  const layers = [
-    { id: 'brand-activity', show: layerOptions.activity, color: '#f56c6c' },
-    { id: 'brand-social', show: layerOptions.social, color: '#409eff' },
-    { id: 'brand-crowd', show: layerOptions.crowd, color: '#67c23a' },
-    { id: 'brand-preference', show: layerOptions.preference, color: '#e6a23c' }
-  ]
-
-  layers.forEach(({ id, show, color }) => {
-    mapRef.value?.removeLayer(id)
-    if (show) {
-      const data = generateHeatData(id, 0.9)
-      mapRef.value?.addHeatLayer(id, data, {
-        radius: 35,
-        intensity: 1.2,
-        opacity: 0.65
-      })
-    }
-  })
-
-  // 品牌网点
-  mapRef.value?.removeLayer('brand-poi')
-  if (layerOptions.poi) {
-    const poiData = []
-    const baseLng = 104.06
-    const baseLat = 30.65
-    for (let i = 0; i < 20; i++) {
-      poiData.push({
-        coordinates: [
-          baseLng + (Math.random() - 0.5) * 0.15,
-          baseLat + (Math.random() - 0.5) * 0.12
-        ],
-        properties: { name: `劲牌网点${i + 1}` }
-      })
-    }
-    mapRef.value?.addScatterLayer('brand-poi', poiData, {
-      radius: 8,
-      color: currentBrand.value.color || '#f56c6c',
-      opacity: 0.9
-    })
-  }
-}
-
-const updateMetrics = () => {
-  const brand = currentBrand.value
-  crowdData.a1 = Math.floor(brand.crowdRatio * 0.6)
-  crowdData.a2 = Math.floor(brand.crowdRatio * 0.3)
-  crowdData.a3 = Math.floor(brand.crowdRatio * 0.1)
-}
-
-// 图表
-const updateCharts = () => {
-  nextTick(() => {
-    initCompareChart()
-    initDistrictChart()
-    initFunnelChart()
-  })
-}
-
-const initCompareChart = () => {
-  if (!compareChartRef.value) return
-  if (!compareChart) compareChart = echarts.init(compareChartRef.value)
-
-  const option = {
-    tooltip: { trigger: 'axis' },
-    grid: { left: 50, right: 20, top: 20, bottom: 30 },
-    legend: { data: ['品牌活跃度', '社媒指数', 'A1-A3占比', '偏好度'], top: 0, textStyle: { fontSize: 10 } },
-    xAxis: {
-      type: 'category',
-      data: brandList.value.map(b => b.name),
-      axisLabel: { fontSize: 10, rotate: 15 }
+  // 使用 OSM 纯净底图（无标注）
+  const map = new maplibregl.Map({
+    container: mapContainer.value,
+    style: {
+      version: 8,
+      sources: {
+        'osm': {
+          type: 'raster',
+          tiles: [
+            'https://a.basemaps.toolserver.org/basemaps-neutral/{z}/{x}/{y}.png',
+            'https://b.basemaps.toolserver.org/basemaps-neutral/{z}/{x}/{y}.png',
+            'https://c.basemaps.toolserver.org/basemaps-neutral/{z}/{x}/{y}.png'
+          ],
+          tileSize: 256,
+          attribution: ''
+        }
+      },
+      layers: [
+        {
+          id: 'osm-layer',
+          type: 'raster',
+          source: 'osm',
+          minzoom: 0,
+          maxzoom: 18
+        }
+      ]
     },
-    yAxis: { type: 'value', max: 100, nameLocation: 'middle', nameGap: 35, axisLabel: { fontSize: 10 } },
-    series: [
-      { name: '品牌活跃度', data: brandList.value.map(b => b.activity), type: 'bar', itemStyle: { color: '#f56c6c' }, label: { show: true, position: 'top', fontSize: 9 } },
-      { name: '社媒指数', data: brandList.value.map(b => b.socialIndex), type: 'bar', itemStyle: { color: '#409eff' }, label: { show: true, position: 'top', fontSize: 9 } },
-      { name: 'A1-A3占比', data: brandList.value.map(b => b.crowdRatio), type: 'bar', itemStyle: { color: '#67c23a' }, label: { show: true, position: 'top', fontSize: 9 } },
-      { name: '偏好度', data: brandList.value.map(b => b.preference), type: 'bar', itemStyle: { color: '#e6a23c' }, label: { show: true, position: 'top', fontSize: 9 } }
+    center: [114.52, 38.05],
+    zoom: 7,
+    attributionControl: false
+  })
+
+  map.on('load', () => {
+    loading.value = false
+    mapInstance.value = map
+    initCityData()
+    cityGeoJSON.value = generateHebeiGeoJSON()
+    renderCityLayer()
+  })
+
+  map.on('click', (e) => {
+    const features = map.queryRenderedFeatures(e.point)
+    if (!features?.length) return
+    const feature = features[0]
+    const code = feature.properties.code
+    const city = cityData.value.find(c => c.code === code)
+    if (city) {
+      handleSelectCity(city)
+    }
+  })
+}
+
+// 清理地图资源
+const cleanupMap = () => {
+  if (mapInstance.value) {
+    mapInstance.value.remove()
+    mapInstance.value = null
+  }
+}
+
+// 河北省城市数据
+const hebeiCities = [
+  { code: '130100', name: '石家庄', center: [114.52, 38.05], sales: 2850, marketShare: 18.5, storeCount: 1256, growth: 12.3 },
+  { code: '130200', name: '唐山', center: [118.18, 39.63], sales: 1980, marketShare: 12.8, storeCount: 892, growth: 8.5 },
+  { code: '130300', name: '秦皇岛', center: [119.59, 39.94], sales: 520, marketShare: 3.4, storeCount: 245, growth: -2.1 },
+  { code: '130400', name: '邯郸', center: [114.54, 36.62], sales: 1560, marketShare: 10.1, storeCount: 678, growth: 5.2 },
+  { code: '130500', name: '邢台', center: [114.50, 37.07], sales: 890, marketShare: 5.8, storeCount: 412, growth: 3.8 },
+  { code: '130600', name: '保定', center: [115.47, 38.87], sales: 1720, marketShare: 11.2, storeCount: 756, growth: 9.1 },
+  { code: '130700', name: '张家口', center: [114.88, 40.77], sales: 680, marketShare: 4.4, storeCount: 312, growth: 1.5 },
+  { code: '130800', name: '承德', center: [117.94, 40.97], sales: 450, marketShare: 2.9, storeCount: 198, growth: -0.8 },
+  { code: '130900', name: '沧州', center: [116.83, 38.30], sales: 1350, marketShare: 8.8, storeCount: 589, growth: 6.7 },
+  { code: '131000', name: '廊坊', center: [116.68, 39.52], sales: 980, marketShare: 6.4, storeCount: 445, growth: 11.2 },
+  { code: '131100', name: '衡水', center: [115.67, 37.74], sales: 720, marketShare: 4.7, storeCount: 334, growth: 4.3 },
+  { code: '131200', name: '雄安新区', center: [115.82, 38.97], sales: 280, marketShare: 1.8, storeCount: 125, growth: 25.6 }
+]
+
+// 初始化城市数据（添加热度等级和排名）
+const initCityData = () => {
+  // 按销量排序
+  const sorted = [...hebeiCities].sort((a, b) => b.sales - a.sales)
+
+  // 根据排名分配热度等级（前4名高，中4名中，后4名低）
+  cityData.value = sorted.map((city, index) => ({
+    ...city,
+    rank: index + 1,
+    heatLevel: index < 4 ? 'high' : index < 8 ? 'medium' : 'low'
+  }))
+}
+
+// 热度统计
+const heatStats = computed(() => {
+  return {
+    high: cityData.value.filter(c => c.heatLevel === 'high').length,
+    medium: cityData.value.filter(c => c.heatLevel === 'medium').length,
+    low: cityData.value.filter(c => c.heatLevel === 'low').length
+  }
+})
+
+// 过滤后的城市列表
+const filteredCities = computed(() => {
+  if (!searchKeyword.value) return cityData.value
+  return cityData.value.filter(c => c.name.includes(searchKeyword.value))
+})
+
+// 城市排行榜
+const cityRankList = computed(() => {
+  return [...cityData.value].sort((a, b) => a.rank - b.rank)
+})
+
+// 选中城市详情
+const selectedCityData = computed(() => {
+  if (!selectedCity.value) return null
+  return cityData.value.find(c => c.code === selectedCity.value)
+})
+
+// 获取热度标签
+const getHeatLabel = (level) => {
+  return { high: '高', medium: '中', low: '低' }[level] || '-'
+}
+
+// 获取热度标签类型
+const getHeatTagType = (level) => {
+  return { high: 'danger', medium: 'warning', low: 'info' }[level] || 'info'
+}
+
+// 生成河北省城市GeoJSON
+const generateHebeiGeoJSON = () => {
+  const cities = cityData.value
+  return {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": { code: '130100', name: '石家庄', heatLevel: cities.find(c => c.code === '130100')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[114.1, 37.7], [114.9, 37.7], [114.9, 38.4], [114.1, 38.4], [114.1, 37.7]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '130200', name: '唐山', heatLevel: cities.find(c => c.code === '130200')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[117.5, 39.2], [119.0, 39.2], [119.0, 40.0], [117.5, 40.0], [117.5, 39.2]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '130300', name: '秦皇岛', heatLevel: cities.find(c => c.code === '130300')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[119.0, 39.7], [119.9, 39.7], [119.9, 40.2], [119.0, 40.2], [119.0, 39.7]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '130400', name: '邯郸', heatLevel: cities.find(c => c.code === '130400')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[114.0, 36.2], [115.1, 36.2], [115.1, 37.0], [114.0, 37.0], [114.0, 36.2]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '130500', name: '邢台', heatLevel: cities.find(c => c.code === '130500')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[114.2, 36.8], [115.2, 36.8], [115.2, 37.4], [114.2, 37.4], [114.2, 36.8]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '130600', name: '保定', heatLevel: cities.find(c => c.code === '130600')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[114.1, 38.4], [115.9, 38.4], [115.9, 39.2], [114.1, 39.2], [114.1, 38.4]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '130700', name: '张家口', heatLevel: cities.find(c => c.code === '130700')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[114.2, 40.3], [115.6, 40.3], [115.6, 41.2], [114.2, 41.2], [114.2, 40.3]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '130800', name: '承德', heatLevel: cities.find(c => c.code === '130800')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[117.0, 40.5], [118.5, 40.5], [118.5, 41.5], [117.0, 41.5], [117.0, 40.5]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '130900', name: '沧州', heatLevel: cities.find(c => c.code === '130900')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[115.8, 38.0], [117.3, 38.0], [117.3, 38.6], [115.8, 38.6], [115.8, 38.0]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '131000', name: '廊坊', heatLevel: cities.find(c => c.code === '131000')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[116.0, 39.2], [117.0, 39.2], [117.0, 39.8], [116.0, 39.8], [116.0, 39.2]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '131100', name: '衡水', heatLevel: cities.find(c => c.code === '131100')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[115.2, 37.4], [116.2, 37.4], [116.2, 38.2], [115.2, 38.2], [115.2, 37.4]]] }
+      },
+      {
+        "type": "Feature",
+        "properties": { code: '131200', name: '雄安新区', heatLevel: cities.find(c => c.code === '131200')?.heatLevel },
+        "geometry": { "type": "Polygon", "coordinates": [[[115.5, 38.7], [116.2, 38.7], [116.2, 39.2], [115.5, 39.2], [115.5, 38.7]]] }
+      }
     ]
   }
-  compareChart.setOption(option)
 }
 
-const initDistrictChart = () => {
-  if (!districtChartRef.value) return
-  if (!districtChart) districtChart = echarts.init(districtChartRef.value)
+const renderCityLayer = () => {
+  if (!mapInstance.value || !cityGeoJSON.value) return
 
-  const option = {
-    tooltip: { trigger: 'axis' },
-    grid: { left: 60, right: 20, top: 20, bottom: 30 },
-    xAxis: { type: 'value', max: 100, name: '热度指数', nameLocation: 'middle', nameGap: 30, axisLabel: { fontSize: 10 } },
-    yAxis: {
-      type: 'category',
-      data: districtData.value.map(d => d.name).reverse(),
-      nameLocation: 'middle', nameGap: 45, axisLabel: { fontSize: 10 }
-    },
-    series: [{
-      data: districtData.value.map(d => d.value).reverse(),
-      type: 'bar',
-      itemStyle: {
-        color: (params) => {
-          const val = params.value
-          if (val >= 85) return '#f56c6c'
-          if (val >= 70) return '#e6a23c'
-          return '#67c23a'
-        }
-      },
-      label: { show: true, position: 'right', formatter: '{c}', fontSize: 10 }
-    }]
+  // 清理旧图层和标注
+  if (mapInstance.value.getLayer('city-fill')) {
+    mapInstance.value.removeLayer('city-fill')
   }
-  districtChart.setOption(option)
-}
-
-const initFunnelChart = () => {
-  if (!funnelChartRef.value) return
-  if (!funnelChart) funnelChart = echarts.init(funnelChartRef.value)
-
-  const brand = currentBrand.value
-  const total = 100
-  const a1 = brand.crowdRatio * 0.6
-  const a2 = brand.crowdRatio * 0.3
-  const a3 = brand.crowdRatio * 0.1
-
-  const option = {
-    tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
-    grid: { left: 40, right: 40, top: 20, bottom: 30 },
-    xAxis: {
-      type: 'category',
-      data: ['总曝光人群(A1)', '兴趣人群(A2)', '主动询问(A3)', '购买转化'],
-      axisLabel: { fontSize: 10, rotate: 10 }
-    },
-    yAxis: { type: 'value', max: 100, name: '占比(%)', nameLocation: 'middle', nameGap: 35, axisLabel: { fontSize: 10 } },
-    series: [{
-      data: [total, Math.round(a1 / total * 100), Math.round(a2 / total * 100), Math.round(a3 / total * 100)],
-      type: 'bar',
-      itemStyle: {
-        color: (params) => {
-          const colors = ['#409eff', '#67c23a', '#e6a23c', '#f56c6c']
-          return colors[params.dataIndex]
-        }
-      },
-      label: { show: true, position: 'top', formatter: '{c}%', fontSize: 10 }
-    }]
+  if (mapInstance.value.getLayer('city-border')) {
+    mapInstance.value.removeLayer('city-border')
   }
-  funnelChart.setOption(option)
+  if (mapInstance.value.getSource('city-source')) {
+    mapInstance.value.removeSource('city-source')
+  }
+  // 清理旧标注
+  cityMarkers.forEach(marker => marker.remove())
+  cityMarkers.length = 0
+
+  // 添加 GeoJSON Source
+  mapInstance.value?.addSource('city-source', {
+    type: 'geojson',
+    data: cityGeoJSON.value
+  })
+
+  // 添加填充图层 - 3档色阶
+  mapInstance.value?.addLayer({
+    id: 'city-fill',
+    type: 'fill',
+    source: 'city-source',
+    paint: {
+      'fill-color': [
+        'match',
+        ['get', 'heatLevel'],
+        'high', '#f56c6c',    // 高热度 - 红色
+        'medium', '#e6a23c', // 中热度 - 黄色
+        'low', '#67c23a',    // 低热度 - 绿色
+        '#d3d3d3'            // 默认灰色
+      ],
+      'fill-opacity': 0.6
+    }
+  })
+
+  // 添加边框图层
+  mapInstance.value?.addLayer({
+    id: 'city-border',
+    type: 'line',
+    source: 'city-source',
+    paint: {
+      'line-color': [
+        'match',
+        ['get', 'heatLevel'],
+        'high', '#c0392b',    // 高热度边框 - 深红
+        'medium', '#c8860a',   // 中热度边框 - 深黄
+        'low', '#4a9e2f',     // 低热度边框 - 深绿
+        '#999999'             // 默认灰色
+      ],
+      'line-width': 2
+    }
+  })
+
+  // 添加城市名称标注
+  cityData.value.forEach(city => {
+    const marker = new maplibregl.Marker({ color: '#303133' })
+      .setLngLat(city.center)
+      .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`
+        <div style="padding: 8px;">
+          <strong>${city.name}</strong><br/>
+          销量: ${city.sales}万<br/>
+          热度: ${getHeatLabel(city.heatLevel)}
+        </div>
+      `))
+      .addTo(mapInstance.value)
+    cityMarkers.push(marker)
+  })
 }
 
-const handleResize = () => {
-  compareChart?.resize()
-  districtChart?.resize()
-  funnelChart?.resize()
+const handleSelectCity = (city) => {
+  selectedCity.value = city.code
+
+  // 飞转到该城市
+  mapInstance.value?.flyTo({
+    center: city.center,
+    zoom: 9,
+    duration: 1000
+  })
+}
+
+const handleExport = () => {
+  if (cityData.value.length === 0) {
+    ElMessage.warning('暂无数据可导出')
+    return
+  }
+
+  // 生成 Excel 数据
+  const exportData = cityData.value.map(city => ({
+    '排名': city.rank,
+    '城市编码': city.code,
+    '城市名称': city.name,
+    '品牌热度': getHeatLabel(city.heatLevel),
+    '品牌销量(万元)': city.sales,
+    '市场占有率(%)': city.marketShare,
+    '网点数量': city.storeCount,
+    '同比增长率(%)': city.growth
+  }))
+
+  // 转换为 CSV 格式
+  const headers = Object.keys(exportData[0])
+  const csvContent = [
+    headers.join(','),
+    ...exportData.map(row => headers.map(h => row[h]).join(','))
+  ].join('\n')
+
+  // 下载文件
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', `河北省品牌热度_${new Date().toLocaleDateString()}.csv`)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  ElMessage.success('数据已导出')
 }
 
 onMounted(() => {
-  updateMetrics()
-  window.addEventListener('resize', handleResize)
+  initMap()
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  compareChart?.dispose()
-  districtChart?.dispose()
-  funnelChart?.dispose()
+  cleanupMap()
 })
 </script>
 
 <style scoped>
-.brand-insight-page { padding: 20px; }
-
-.el-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.brand-insight-page {
+  padding: 20px;
 }
 
-.header-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.filter-panel {
+.city-panel {
   padding: 16px;
   background: #f5f7fa;
   border-radius: 4px;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.filter-panel h4 {
+.city-panel h4 {
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid #e6e6e6;
 }
 
-.brand-list {
+.city-list {
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 420px;
-  overflow-y: auto;
 }
 
-.brand-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
+.city-item {
+  padding: 12px;
   background: #fff;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
-  border: 2px solid transparent;
+  border-left: 3px solid transparent;
 }
 
-.brand-item:hover {
-  background: #f5f5f5;
+.city-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.brand-item.active {
-  border-color: #409eff;
+.city-item.active {
+  border-left-color: #409eff;
   background: #ecf5ff;
 }
 
-.brand-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.city-item.high {
+  border-left-color: #f56c6c;
 }
 
-.brand-info {
-  flex: 1;
-  min-width: 0;
+.city-item.medium {
+  border-left-color: #e6a23c;
 }
 
-.brand-name {
-  font-weight: bold;
-  font-size: 13px;
+.city-item.low {
+  border-left-color: #67c23a;
+}
+
+.city-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.city-name {
+  font-weight: 500;
   color: #303133;
 }
 
-.brand-score {
-  font-size: 11px;
+.city-rank {
+  font-size: 12px;
   color: #909399;
-  margin-top: 2px;
+}
+
+.city-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.heat-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  color: #fff;
+}
+
+.heat-tag.high {
+  background: #f56c6c;
+}
+
+.heat-tag.medium {
+  background: #e6a23c;
+}
+
+.heat-tag.low {
+  background: #67c23a;
+}
+
+.sales {
+  font-size: 12px;
+  color: #606266;
 }
 
 .map-wrapper {
@@ -558,18 +621,25 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.layer-control {
+.map-container {
+  width: 100%;
+  height: 100%;
+}
+
+.map-loading {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 12px;
+  color: #666;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px 40px;
+  border-radius: 8px;
 }
 
 .map-legend {
@@ -577,202 +647,179 @@ onUnmounted(() => {
   bottom: 10px;
   left: 10px;
   background: rgba(255, 255, 255, 0.95);
-  padding: 8px 14px;
+  padding: 12px 16px;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 1;
-  font-size: 12px;
+}
+
+.legend-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.legend-items {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-
-.heat-bar {
-  display: inline-block;
-  width: 20px;
-  height: 10px;
-  border-radius: 2px;
-}
-
-.heat-bar.high { background: #f56c6c; }
-.heat-bar.mid { background: #e6a23c; }
-.heat-bar.low { background: #67c23a; }
-
-/* 品牌综合指数卡片 */
-.brand-score-card {
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #f56c6c, #9933ff);
-  border-radius: 8px;
-  color: #fff;
-  margin-bottom: 12px;
-}
-
-.brand-header {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  margin-bottom: 10px;
+  font-size: 12px;
+  color: #606266;
 }
 
-.brand-color-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid #fff;
+.color-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
 }
 
-.brand-title {
-  font-weight: bold;
-  font-size: 16px;
-  flex: 1;
+.color-box.high {
+  background: #f56c6c;
 }
 
-.overall-score {
+.color-box.medium {
+  background: #e6a23c;
+}
+
+.color-box.low {
+  background: #67c23a;
+}
+
+.stats-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.heat-stats-card {
+  flex-shrink: 0;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.card-header span {
+  font-size: 14px;
+}
+
+.heat-stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+}
+
+.heat-stat-item {
+  text-align: center;
+  padding: 12px 20px;
+  border-radius: 6px;
+}
+
+.heat-stat-item.high {
+  background: rgba(245, 108, 108, 0.1);
+}
+
+.heat-stat-item.medium {
+  background: rgba(230, 162, 60, 0.1);
+}
+
+.heat-stat-item.low {
+  background: rgba(103, 194, 58, 0.1);
+}
+
+.stat-num {
+  font-size: 28px;
+  font-weight: 700;
+  color: #303133;
+}
+
+.heat-stat-item.high .stat-num {
+  color: #f56c6c;
+}
+
+.heat-stat-item.medium .stat-num {
+  color: #e6a23c;
+}
+
+.heat-stat-item.low .stat-num {
+  color: #67c23a;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.city-detail-card {
+  flex-shrink: 0;
+}
+
+.city-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.score-label {
-  font-size: 12px;
-  opacity: 0.9;
-}
-
-.score-value {
-  font-size: 28px;
-  font-weight: bold;
-}
-
-/* 四维指标卡片 */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.metric-card {
-  padding: 12px;
-  background: #fff;
-  border-radius: 6px;
-  border: 1px solid #e6e6e6;
-}
-
-.metric-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
-.metric-icon {
-  font-size: 14px;
-}
-
-.metric-name {
-  font-size: 11px;
-  color: #606266;
-  font-weight: 500;
-}
-
-.metric-value {
-  font-size: 20px;
-  font-weight: bold;
-  color: #303133;
-  margin-bottom: 6px;
-}
-
-.metric-bar {
-  height: 4px;
-  background: #f5f7fa;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.5s;
-}
-
-/* A1-A3人群分布 */
-.crowd-dist-card {
-  padding: 14px 16px;
-  background: #f5f7fa;
-  border-radius: 6px;
-}
-
-.crowd-dist-card h4 {
-  margin-bottom: 12px;
+.detail-row .label {
   font-size: 13px;
-}
-
-.crowd-flow {
-  margin-bottom: 12px;
-}
-
-.crowd-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.crowd-circle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: 2px solid;
-}
-
-.crowd-circle.a1 { background: rgba(64, 158, 255, 0.15); border-color: #409eff; }
-.crowd-circle.a2 { background: rgba(103, 194, 58, 0.15); border-color: #67c23a; }
-.crowd-circle.a3 { background: rgba(230, 162, 60, 0.15); border-color: #e6a23c; }
-
-.crowd-label {
-  font-size: 10px;
-  font-weight: bold;
-  color: #606266;
-}
-
-.crowd-value {
-  font-size: 12px;
-  font-weight: bold;
-  color: #303133;
-}
-
-.crowd-arrow {
-  font-size: 16px;
   color: #909399;
 }
 
-.crowd-desc p {
-  margin: 4px 0;
-  font-size: 11px;
-  color: #606266;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.detail-row .value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
 }
 
-.dot {
+.rank-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rank-card :deep(.el-card__body) {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.rank-list {
+  height: 100%;
+}
+
+.heat-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
 }
 
-.a1-dot { background: #409eff; }
-.a2-dot { background: #67c23a; }
-.a3-dot { background: #e6a23c; }
+.heat-dot.high {
+  background: #f56c6c;
+}
+
+.heat-dot.medium {
+  background: #e6a23c;
+}
+
+.heat-dot.low {
+  background: #67c23a;
+}
 </style>

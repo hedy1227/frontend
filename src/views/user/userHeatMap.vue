@@ -110,99 +110,154 @@
           </el-card>
 
           <el-card shadow="hover" class="detail-card">
-            <template #header>选中路网详情</template>
+            <template #header>区域人群画像</template>
             <div v-if="selectedRoad" class="road-detail">
               <el-descriptions :column="1" border size="small">
-                <el-descriptions-item label="路网名称">{{ selectedRoad.blockName }}</el-descriptions-item>
-                <el-descriptions-item label="所属街道">{{ selectedRoad.street }}</el-descriptions-item>
+                <el-descriptions-item label="区域名称">{{ selectedRoad.blockName }}</el-descriptions-item>
                 <el-descriptions-item label="用户数">
                   <span class="highlight">{{ selectedRoad.userCount.toLocaleString() }}</span>
                 </el-descriptions-item>
-                <el-descriptions-item label="密度等级">
-                  <el-tag :type="getDensityType(selectedRoad.density)" size="small">
-                    {{ getDensityLabel(selectedRoad.density) }}
-                  </el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="多样性指数">{{ (selectedRoad.diversityIndex * 100).toFixed(1) }}%</el-descriptions-item>
               </el-descriptions>
 
-              <el-divider>标签分布</el-divider>
-
-              <div class="tag-section">
-                <div class="tag-title">性别分布</div>
-                <div class="icon-dist-row">
-                  <div class="icon-dist-item">
-                    <span class="icon-badge male">♂</span>
-                    <span class="icon-label">男</span>
-                    <div class="icon-bar"><div class="icon-bar-fill male" :style="{width: selectedRoad.tagDistribution.gender.male + '%'}"></div></div>
-                    <span class="icon-pct">{{ selectedRoad.tagDistribution.gender.male }}%</span>
+              <!-- 性别分布 -->
+              <div class="profile-section">
+                <div class="section-title">性别分布</div>
+                <div class="gender-distribution">
+                  <div class="gender-item">
+                    <span class="gender-icon male">
+                      <el-icon><Male /></el-icon>
+                    </span>
+                    <span class="gender-label">男性</span>
+                    <span class="gender-value">{{ selectedRoad.profile.gender.male }}%</span>
                   </div>
-                  <div class="icon-dist-item">
-                    <span class="icon-badge female">♀</span>
-                    <span class="icon-label">女</span>
-                    <div class="icon-bar"><div class="icon-bar-fill female" :style="{width: selectedRoad.tagDistribution.gender.female + '%'}"></div></div>
-                    <span class="icon-pct">{{ selectedRoad.tagDistribution.gender.female }}%</span>
+                  <div class="gender-item">
+                    <span class="gender-icon female">
+                      <el-icon><Female /></el-icon>
+                    </span>
+                    <span class="gender-label">女性</span>
+                    <span class="gender-value">{{ selectedRoad.profile.gender.female }}%</span>
+                  </div>
+                </div>
+                <div class="gender-bar">
+                  <div class="gender-segment male" :style="{ width: selectedRoad.profile.gender.male + '%' }"></div>
+                  <div class="gender-segment female" :style="{ width: selectedRoad.profile.gender.female + '%' }"></div>
+                </div>
+              </div>
+
+              <!-- 年龄分布 -->
+              <div class="profile-section">
+                <div class="section-title">年龄分布</div>
+                <div class="bar-list">
+                  <div class="bar-item">
+                    <span class="bar-label">18-25岁</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.age['18-25'] + '%', background: '#67c23a' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.age['18-25'] }}%</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">26-35岁</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.age['26-35'] + '%', background: '#409eff' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.age['26-35'] }}%</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">36-45岁</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.age['36-45'] + '%', background: '#e6a23c' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.age['36-45'] }}%</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">46-55岁</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.age['46-55'] + '%', background: '#909399' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.age['46-55'] }}%</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">55岁以上</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.age['55+'] + '%', background: '#909399' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.age['55+'] }}%</span>
                   </div>
                 </div>
               </div>
 
-              <div class="tag-section">
-                <div class="tag-title">年龄分布</div>
-                <div class="icon-tags">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.age" :key="key" class="icon-tag-chip">
-                    <span class="chip-icon">👤</span>
-                    <span class="chip-label">{{ key }}</span>
-                    <span class="chip-pct">{{ val }}%</span>
+              <!-- 价格带分布 -->
+              <div class="profile-section">
+                <div class="section-title">价格带分布</div>
+                <div class="bar-list">
+                  <div class="bar-item">
+                    <span class="bar-label">0-20元</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.priceRange['0-20'] + '%', background: '#67c23a' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.priceRange['0-20'] }}%</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">20-50元</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.priceRange['20-50'] + '%', background: '#409eff' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.priceRange['20-50'] }}%</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">50-100元</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.priceRange['50-100'] + '%', background: '#e6a23c' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.priceRange['50-100'] }}%</span>
+                  </div>
+                  <div class="bar-item">
+                    <span class="bar-label">100元以上</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.priceRange['100+'] + '%', background: '#909399' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.priceRange['100+'] }}%</span>
                   </div>
                 </div>
               </div>
 
-              <div class="tag-section">
-                <div class="tag-title">活跃度分布</div>
-                <div class="icon-tags">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.activity" :key="key" class="icon-tag-chip">
-                    <span class="chip-icon">{{ getActivityIcon(key) }}</span>
-                    <span class="chip-label">{{ getActivityLabel(key) }}</span>
-                    <span class="chip-pct">{{ val }}%</span>
+              <!-- 品牌分布 -->
+              <div class="profile-section">
+                <div class="section-title">品牌分布</div>
+                <div class="bar-list">
+                  <div class="bar-item">
+                    <span class="bar-label">劲酒</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.brand['jinjiu'] + '%', background: '#f56c6c' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.brand['jinjiu'] }}%</span>
                   </div>
-                </div>
-              </div>
-
-              <div class="tag-section">
-                <div class="tag-title">消费层级分布</div>
-                <div class="icon-tags">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.consumption" :key="key" class="icon-tag-chip">
-                    <span class="chip-icon">💎</span>
-                    <span class="chip-label">{{ key }}</span>
-                    <span class="chip-pct">{{ val }}%</span>
+                  <div class="bar-item">
+                    <span class="bar-label">毛铺</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.brand['maopu'] + '%', background: '#67c23a' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.brand['maopu'] }}%</span>
                   </div>
-                </div>
-              </div>
-
-              <div class="tag-section">
-                <div class="tag-title">忠诚度分布</div>
-                <div class="icon-tags">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.loyalty" :key="key" class="icon-tag-chip">
-                    <span class="chip-icon">{{ getLoyaltyIcon(key) }}</span>
-                    <span class="chip-label">{{ getLoyaltyLabel(key) }}</span>
-                    <span class="chip-pct">{{ val }}%</span>
+                  <div class="bar-item">
+                    <span class="bar-label">椰岛</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.brand['yedao'] + '%', background: '#409eff' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.brand['yedao'] }}%</span>
                   </div>
-                </div>
-              </div>
-
-              <div class="tag-section">
-                <div class="tag-title">饮酒偏好分布</div>
-                <div class="icon-tags">
-                  <div v-for="(val, key) in selectedRoad.tagDistribution.preference" :key="key" class="icon-tag-chip">
-                    <span class="chip-icon">{{ getPreferenceIcon(key) }}</span>
-                    <span class="chip-label">{{ getPreferenceLabel(key) }}</span>
-                    <span class="chip-pct">{{ val }}%</span>
+                  <div class="bar-item">
+                    <span class="bar-label">其它</span>
+                    <div class="bar-wrap">
+                      <div class="bar" :style="{ width: selectedRoad.profile.brand['other'] + '%', background: '#909399' }"></div>
+                    </div>
+                    <span class="bar-value">{{ selectedRoad.profile.brand['other'] }}%</span>
                   </div>
                 </div>
               </div>
             </div>
             <div v-else class="no-selection">
-              <el-empty description="点击地图上的路网查看详情" />
+              <el-empty description="点击地图上的区域查看人群画像" />
             </div>
           </el-card>
         </el-col>
@@ -261,6 +316,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Male, Female } from '@element-plus/icons-vue'
 import GdsMap from '@/components/GdsMap.vue'
 
 const mapRef = ref()
@@ -372,9 +428,7 @@ const loadUserHeatData = () => {
     // 随机色阶值，用于生成随机颜色
     feature.properties.colorValue = Math.random()
 
-    const genderDistribution = { male: Math.floor(Math.random() * 30 + 45), female: 0 }
-    genderDistribution.female = 100 - genderDistribution.male
-
+    // 年龄分布
     const ageDistribution = {
       '18-25': Math.floor(Math.random() * 20 + 5),
       '26-35': Math.floor(Math.random() * 25 + 20),
@@ -387,53 +441,39 @@ const loadUserHeatData = () => {
       ageDistribution[k] = Math.round(ageDistribution[k] / ageTotal * 100)
     })
 
-    const activityDistribution = {
-      high: Math.floor(Math.random() * 20 + 15),
-      medium: Math.floor(Math.random() * 20 + 25),
-      low: Math.floor(Math.random() * 15 + 20),
-      silent: 0
-    }
-    activityDistribution.silent = 100 - Object.values(activityDistribution).reduce((a, b) => a + b, 0)
+    // 性别分布 - 男性为主
+    const genderDistribution = { male: 95, female: 5 }
 
-    const consumptionDistribution = {
-      '5A': Math.floor(Math.random() * 8 + 3),
-      '4R': Math.floor(Math.random() * 15 + 15),
-      '3R': Math.floor(Math.random() * 15 + 20),
-      '2R': Math.floor(Math.random() * 15 + 15),
-      '1R': 0
+    // 价格带分布
+    const priceRangeDistribution = {
+      '0-20': Math.floor(Math.random() * 15 + 15),
+      '20-50': Math.floor(Math.random() * 20 + 25),
+      '50-100': Math.floor(Math.random() * 15 + 15),
+      '100+': 0
     }
-    consumptionDistribution['1R'] = 100 - Object.values(consumptionDistribution).reduce((a, b) => a + b, 0)
+    priceRangeDistribution['100+'] = 100 - Object.values(priceRangeDistribution).reduce((a, b) => a + b, 0)
 
-    const loyaltyDistribution = {
-      loyal: Math.floor(Math.random() * 15 + 10),
-      active: Math.floor(Math.random() * 20 + 20),
-      normal: Math.floor(Math.random() * 20 + 25),
-      risk: 0
+    // 品牌分布
+    const brandDistribution = {
+      'jinjiu': Math.floor(Math.random() * 25 + 40),
+      'maopu': Math.floor(Math.random() * 15 + 20),
+      'yedao': Math.floor(Math.random() * 10 + 10),
+      'other': 0
     }
-    loyaltyDistribution.risk = 100 - Object.values(loyaltyDistribution).reduce((a, b) => a + b, 0)
-
-    const preferenceDistribution = {
-      baijiu: Math.floor(Math.random() * 25 + 30),
-      beer: Math.floor(Math.random() * 15 + 15),
-      mix: Math.floor(Math.random() * 10 + 10),
-      none: 0
-    }
-    preferenceDistribution.none = 100 - Object.values(preferenceDistribution).reduce((a, b) => a + b, 0)
+    brandDistribution['other'] = 100 - Object.values(brandDistribution).reduce((a, b) => a + b, 0)
 
     mockData.push({
       id: index,
-      blockName: feature.properties.名称 || `成华区四级路网${String(index + 1).padStart(3, '0')}`,
+      blockName: feature.properties.名称 || `区域${String(index + 1).padStart(3, '0')}`,
       street: feature.properties.street,
       userCount,
       density,
       diversityIndex: Math.round((Math.random() * 0.4 + 0.5) * 100) / 100,
-      tagDistribution: {
-        gender: genderDistribution,
+      profile: {
         age: ageDistribution,
-        activity: activityDistribution,
-        consumption: consumptionDistribution,
-        loyalty: loyaltyDistribution,
-        preference: preferenceDistribution
+        gender: genderDistribution,
+        priceRange: priceRangeDistribution,
+        brand: brandDistribution
       }
     })
   })
@@ -474,17 +514,16 @@ const loadUserHeatData = () => {
 const generateCoreTags = (item) => {
   const tags = []
 
-  const topAge = Object.entries(item.tagDistribution.age).sort((a, b) => b[1] - a[1])[0]
+  const topAge = Object.entries(item.profile.age).sort((a, b) => b[1] - a[1])[0]
   if (topAge) tags.push(`${topAge[0]}为主`)
 
-  if (item.tagDistribution.activity.high > 30) tags.push('高活跃')
-  if (item.tagDistribution.loyalty.loyal > 25) tags.push('忠实用户')
-  if (item.tagDistribution.consumption['5A'] > 10 || item.tagDistribution.consumption['4R'] > 30) tags.push('高消费')
+  if (item.density === 'high') tags.push('高密度区域')
+  if (item.density === 'medium') tags.push('中密度区域')
 
-  const topPref = Object.entries(item.tagDistribution.preference).sort((a, b) => b[1] - a[1])[0]
-  if (topPref && topPref[1] > 40) {
-    const prefLabels = { baijiu: '白酒偏好', beer: '啤酒偏好', mix: '混饮偏好', none: '无偏好' }
-    tags.push(prefLabels[topPref[0]])
+  const topPrice = Object.entries(item.profile.priceRange).sort((a, b) => b[1] - a[1])[0]
+  if (topPrice && topPrice[1] > 35) {
+    const priceLabels = { '0-20': '低价位', '20-50': '中价位', '50-100': '高价位', '100+': '高端' }
+    tags.push(priceLabels[topPrice[0]])
   }
 
   return tags.slice(0, 3)
@@ -537,58 +576,15 @@ const handleExport = () => {
 }
 
 const getDensityType = (density) => {
+  // 低密度绿、中密度黄、高密度红
   const types = { high: 'danger', medium: 'warning', low: 'success', none: 'info' }
   return types[density] || 'info'
 }
 
 const getDensityLabel = (density) => {
+  // 低密度绿、中密度黄、高密度红
   const labels = { high: '高密度', medium: '中密度', low: '低密度', none: '无数据' }
   return labels[density] || '未知'
-}
-
-const getActivityLabel = (key) => {
-  const labels = { high: '高活跃', medium: '中活跃', low: '低活跃', silent: '沉默' }
-  return labels[key] || key
-}
-
-const getActivityIcon = (key) => {
-  const icons = { high: '⚡', medium: '📊', low: '🐢', silent: '💤' }
-  return icons[key] || '📌'
-}
-
-const getLoyaltyIcon = (key) => {
-  const icons = { loyal: '💛', active: '💙', normal: '🩶', risk: '🔴' }
-  return icons[key] || '📌'
-}
-
-const getPreferenceIcon = (key) => {
-  const icons = { baijiu: '🍶', beer: '🍺', mix: '🥂', none: '🚫' }
-  return icons[key] || '📌'
-}
-
-const getActivityColor = (key) => {
-  const colors = { high: '#67c23a', medium: '#409EFF', low: '#e6a23c', silent: '#909399' }
-  return colors[key] || '#909399'
-}
-
-const getLoyaltyLabel = (key) => {
-  const labels = { loyal: '忠实用户', active: '活跃会员', normal: '普通用户', risk: '流失风险' }
-  return labels[key] || key
-}
-
-const getLoyaltyColor = (key) => {
-  const colors = { loyal: '#67c23a', active: '#409EFF', normal: '#e6a23c', risk: '#f56c6c' }
-  return colors[key] || '#909399'
-}
-
-const getPreferenceLabel = (key) => {
-  const labels = { baijiu: '白酒偏好', beer: '啤酒偏好', mix: '混饮偏好', none: '无偏好' }
-  return labels[key] || key
-}
-
-const getPreferenceColor = (key) => {
-  const colors = { baijiu: '#f56c6c', beer: '#409EFF', mix: '#9c27b0', none: '#909399' }
-  return colors[key] || '#909399'
 }
 
 const getDiversityColor = (index) => {
@@ -693,7 +689,7 @@ const getDiversityColor = (index) => {
 }
 
 .road-detail {
-  padding: 0 8px;
+  padding: 0;
 }
 
 .highlight {
@@ -701,135 +697,125 @@ const getDiversityColor = (index) => {
   font-weight: bold;
 }
 
-.el-divider {
-  margin: 16px 0;
+.profile-section {
+  margin-top: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ebeef5;
 }
 
-.tag-section {
-  margin-bottom: 16px;
-}
-
-.tag-section:last-child {
+.profile-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
   margin-bottom: 0;
 }
 
-.tag-title {
-  font-size: 12px;
-  color: #909399;
-  margin-bottom: 10px;
+.section-title {
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  color: #303133;
+  margin-bottom: 10px;
 }
 
-/* 性别分布横向条 */
-.icon-dist-row {
+.bar-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.icon-dist-item {
+.bar-item {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.icon-badge {
-  width: 26px;
-  height: 26px;
+.bar-label {
+  width: 60px;
+  font-size: 11px;
+  color: #606266;
+}
+
+.bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: #ebeef5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.bar-value {
+  width: 36px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.gender-distribution {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.gender-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gender-icon {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  font-weight: bold;
-  flex-shrink: 0;
 }
 
-.icon-badge.male {
-  background: #e6f0ff;
-  color: #409EFF;
+.gender-icon.male {
+  background: rgba(64, 158, 255, 0.15);
+  color: #409eff;
 }
 
-.icon-badge.female {
-  background: #fce6e6;
+.gender-icon.female {
+  background: rgba(230, 162, 60, 0.15);
   color: #f56c6c;
 }
 
-.icon-label {
+.gender-label {
   font-size: 12px;
   color: #606266;
-  width: 24px;
-  flex-shrink: 0;
 }
 
-.icon-bar {
-  flex: 1;
-  height: 8px;
-  background: #f0f0f0;
-  border-radius: 4px;
+.gender-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.gender-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
   overflow: hidden;
 }
 
-.icon-bar-fill {
+.gender-segment {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s;
 }
 
-.icon-bar-fill.male {
-  background: linear-gradient(90deg, #74add1, #409EFF);
+.gender-segment.male {
+  background: #409eff;
 }
 
-.icon-bar-fill.female {
-  background: linear-gradient(90deg, #f46d43, #f56c6c);
-}
-
-.icon-pct {
-  font-size: 12px;
-  font-weight: bold;
-  color: #303133;
-  width: 36px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-/* 图标标签芯片 */
-.icon-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.icon-tag-chip {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: #f5f7fa;
-  border: 1px solid #e6e8eb;
-  border-radius: 16px;
-  padding: 4px 10px 4px 6px;
-  transition: all 0.2s;
-}
-
-.icon-tag-chip:hover {
-  border-color: #409EFF;
-  background: #ecf5ff;
-}
-
-.chip-icon {
-  font-size: 14px;
-}
-
-.chip-label {
-  font-size: 11px;
-  color: #606266;
-}
-
-.chip-pct {
-  font-size: 12px;
-  font-weight: bold;
-  color: #303133;
+.gender-segment.female {
+  background: #f56c6c;
 }
 
 .no-selection {
