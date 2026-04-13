@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: jinjiuDRTM-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: system-service
+          uri: lb://jinjiuDRTM-system
+          predicates:
+            - Path=/api/system/**
+        - id: map-service
+          uri: lb://jinjiuDRTM-map
+          predicates:
+            - Path=/api/map/**
+        - id: market-service
+          uri: lb://jinjiuDRTM-market
+          predicates:
+            - Path=/api/market/**
+        - id: analysis-service
+          uri: lb://jinjiuDRTM-analysis
+          predicates:
+            - Path=/api/analysis/**
+
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  is-read-cookie: false
+  is-read-header: true
